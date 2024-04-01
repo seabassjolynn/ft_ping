@@ -6,10 +6,15 @@
                 "${default}",
                 "${workspaceFolder}/headers"
             ],
-            "defines": [],
-            "cStandard": "c17",
-            "cppStandard": "gnu++17",
-            "intelliSenseMode": "linux-gcc-x64"
+            "defines": [
+                "__linux__",
+                "__x86_64__",
+                "_GNU_SOURCE"
+            ],
+            "cStandard": "c99",
+            "cppStandard": "gnu++98",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerPath": "/usr/bin/gcc"
         }
     ],
     "version": 4
