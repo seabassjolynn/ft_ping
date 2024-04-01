@@ -1,6 +1,8 @@
+Project should be compliled and run on debian 12
+
 to compile project:
 1 cd to project folder
-2 run: sudo make run MAKE_ARG=google.com
+2 run: sudo make run MAKE_ARG=google.com // <-------- project is supposed to be launched with sudo as a workaround, but real ping works without sudo, so project should be adjusted to run without sudo in future
 
 google.com can be replaced with whatever ip v 4 address or host name
 
