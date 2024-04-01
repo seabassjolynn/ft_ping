@@ -4,11 +4,11 @@
 
 struct s_header
 {
-    unsigned char type;
-    unsigned char code;
-    short checksum;
-    short identifier;
-    short sequence_number;
+    uint8_t type;
+    uint8_t code;
+    uint16_t checksum;
+    uint16_t identifier;
+    uint16_t sequence_number;
 };
 
 struct s_icmp_echo_request_packet
