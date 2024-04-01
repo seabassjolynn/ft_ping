@@ -1,2 +1,3 @@
 *.o
 .vscode/
+ft_ping
