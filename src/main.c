@@ -27,9 +27,14 @@
 //true - false
 #include <stdbool.h>
 
+//register signint handler
+#include <signal.h>
+
+#include "sigint_handler.h"
+
 #include "icmp_echo_packet.h"
 
-#define EXIT_ERROR_CODE 1
+#include "exit_constants.h"
 
 #define PING_PACKET_SIZE 56
 
@@ -83,11 +88,19 @@ uint16_t caclulate_checksum(void *addr, int len)
 
 #define TIME_INTERVAL_BETWEEN_PINGS_SEC 1
 
+#include "ping_statistics.h"
+#include "free_resources.h"
+
 int main(int ac, char **av) {
+    
     if (ac != 2) {
         printf("Expect 1 argument.");
     }
-
+    
+    signal(SIGINT, handle_sigint);
+    init_resouces();    
+    g_statistics.host_name = av[1];
+    
     //--------------------------resolve host passed as an argument
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
@@ -95,39 +108,39 @@ int main(int ac, char **av) {
     hints.ai_socktype = SOCK_RAW; // Raw socket for ICMP
     hints.ai_protocol = IPPROTO_ICMP; // ICMP protocol
 
-    struct addrinfo *resolved_address;
     
-    int result = getaddrinfo(av[1], NULL, &hints, &resolved_address);
+    
+    int result = getaddrinfo(av[1], NULL, &hints, &g_resources.addr_info);
     if (result != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(result)); //real ping prints: ping: host unknown in case of blabla host
-        freeaddrinfo(resolved_address);
-        exit(EXIT_ERROR_CODE);
+        free_resources();
+        exit(EXIT_ERROR);
     }
 
 
     //here i cast struct sockaddr* to struct sockaddr_in* because ai_addr may contain different address structures: struct sockaddr_in* - for ipv4, struct sockaddr_in6* for ipv6
-    struct sockaddr_in remote_host_net_addr = *((struct sockaddr_in*) resolved_address->ai_addr);
+    struct sockaddr_in remote_host_net_addr = *((struct sockaddr_in*) (g_resources.addr_info)->ai_addr);
     char remote_host_str_addr[INET_ADDRSTRLEN];
     bzero(remote_host_str_addr, INET_ADDRSTRLEN);
     
     if(inet_ntop(AF_INET,&(remote_host_net_addr.sin_addr), remote_host_str_addr, INET_ADDRSTRLEN) == NULL) {
         fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
-        freeaddrinfo(resolved_address);
-        exit(EXIT_ERROR_CODE);
+        free_resources();
+        exit(EXIT_ERROR);
     }
-    freeaddrinfo(resolved_address);
     
     //---------------------open socket
-    int socket_fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-    if (socket_fd == -1) {
+    g_resources.fd_socket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    if (g_resources.fd_socket == -1) {
         fprintf(stderr, "socket: %s\n", strerror(errno));
-        exit(EXIT_ERROR_CODE);
+        free_resources();
+        exit(EXIT_ERROR);
     }
     
     struct timeval tv_out;
     tv_out.tv_sec = 1;
     tv_out.tv_usec = 0;
-    setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv_out, sizeof tv_out);
+    setsockopt(g_resources.fd_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv_out, sizeof tv_out);
 
     //----------------------create packet;
     int sequence_number = 0;
@@ -140,19 +153,20 @@ int main(int ac, char **av) {
         
         //-------------------- print ping header
         printf("PING %s (%s): %d data bytes\n", av[1], remote_host_str_addr, PING_PACKET_SIZE);
-        int sendResult = sendto(socket_fd, &packet, PACKET_LENGTH, 0, resolved_address->ai_addr, resolved_address->ai_addrlen);
+        int sendResult = sendto(g_resources.fd_socket, &packet, PACKET_LENGTH, 0, (g_resources.addr_info)->ai_addr, (g_resources.addr_info)->ai_addrlen);
         if (sendResult == -1) 
         {
             printf("Error when sending ICPM packet. Error: %s\n", strerror(errno));
             //need cleanup function to free address and socket
-            exit(EXIT_ERROR_CODE);
+            free_resources();
+            exit(EXIT_ERROR);
         } else {
             printf("Send ICPM packet successfuly. Number of bytes sent is: %d\n", sendResult);
         }
         
         uint8_t receivedPacket[400];
         bzero(receivedPacket, 400);
-        int recieveResult = recvfrom(socket_fd, receivedPacket, 400, 0, NULL, 0);
+        int recieveResult = recvfrom(g_resources.fd_socket, receivedPacket, 400, 0, NULL, 0);
         if (recieveResult != -1)
         {
             //printf("Received result: %d\n", recieveResult);
@@ -167,8 +181,8 @@ int main(int ac, char **av) {
         }
     }
 
-    printf("Socket fd %d\n", socket_fd);
+    printf("Socket fd %d\n", g_resources.fd_socket);
     //close socket?
-    //freeaddrinfo(resolved_address);
+    free_resources();
     return 0;
 }
