@@ -38,3 +38,9 @@
     Failed to receive ICMP packet
     PING 2.2.2.2 (2.2.2.2): 56 data bytes
     Send ICMP packet successfully. Number of bytes sent is: 56
+
+## Program functionality:
+1. cntrl + c key combination stops ping execution and displays
+ping statistics.
+**currently only statistics header is displayed, and statistics will be**
+**implemented further.**
