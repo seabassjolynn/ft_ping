@@ -1,16 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
 #ifndef PING_STATISTICS_H
 #define PING_STATISTICS_H
 
