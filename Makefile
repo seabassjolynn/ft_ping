@@ -5,9 +5,9 @@ APP_NAME=ft_ping #create variable called APP_NAME and assign value to it which i
 # sources
 SRCS_DIR = src
 HEADERS_DIR = headers
-SRCS = $(addprefix $(SRCS_DIR)/, main.c sigint_handler.c ping_statistics.c free_resources.c)
+SRCS = $(addprefix $(SRCS_DIR)/, main.c sigint_handler.c ping_session.c resources.c ping.c net.c debug.c ping_session_stat.c)
 
-HEADERS = $(addprefix $(HEADERS_DIR)/, icmp_echo_packet.h ping_statistics.h sigint_handler.h exit_constants.h free_resources.h)
+HEADERS = $(addprefix $(HEADERS_DIR)/, ping_session.h sigint_handler.h exit_constants.h resources.h ping.h net.h debug.h ping_session_stat.h)
 
 # -I followed by dir name - it is dirrectory where compiler will find *.h files
 # during compilation process
@@ -40,7 +40,7 @@ all: $(APP)
 
 $(APP): $(OBJS) $(HEADERS) #here this OBJS variable is expaned to list of .o files. And make will go and look for rule that corresponds to name.o file. And it will find this rule in %.o : %.c
 	@ echo target $(APP_NAME)
-	@ $(CC) -o $(APP) $(OBJS)
+	@ $(CC) -o $(APP) $(OBJS) -lm #-lm to link math library, otherwise can not compile
 # -o is compiler flag to produce object *.o file with particular name 
 
 #below is % is a vild card. We say that if we want to produce %.o (whatever name dot o) then we need as dependency same name dot c
@@ -52,6 +52,9 @@ $(APP): $(OBJS) $(HEADERS) #here this OBJS variable is expaned to list of .o fil
 	@ echo target $@
 	$(CC) $(CFLAGS) -I$(HEADERS_DIR) $< -o $@
 
+clean:
+	rm -f $(OBJS)
+
 fclean:
 	@ echo remove program file
 	@ rm -f $(APP_NAME)
@@ -59,7 +62,7 @@ fclean:
 re: clean fclean all
 
 run: re
-	./ft_ping $(MAKE_ARG)
+	./ft_ping $(HOST) $(DEBUG)
 
 # %.o : %.c
 # %.o - target that corresponds to every .o file.

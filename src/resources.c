@@ -1,4 +1,4 @@
-#include "free_resources.h"
+#include "resources.h"
 #include <stdlib.h>
 
 #include <unistd.h>
@@ -9,10 +9,12 @@ void init_resouces()
 {
     g_resources.fd_socket = -1;
     g_resources.addr_info = NULL;
+    g_resources.ping_data_arr = NULL;
 }
 
 void free_resources()
 {
     close(g_resources.fd_socket);
     freeaddrinfo(g_resources.addr_info);
+    free(g_resources.ping_data_arr);
 }
