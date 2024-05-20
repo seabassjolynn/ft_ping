@@ -1,15 +1,18 @@
-#ifndef FREE_RESOURCES_H
-#define FREE_RESOURCES_H
+#ifndef RESOURCES_H
+#define RESOURCES_H
 
 //addrinfo
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 
+#include "ping_session.h"
+
 struct s_resources
 {
     int fd_socket;
     struct addrinfo *addr_info;
+    void *ping_data_arr;
 };
 
 extern struct s_resources g_resources;
