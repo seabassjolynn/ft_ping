@@ -3,7 +3,7 @@
 
 #include <math.h> //pow, sqrt
 #include <stdio.h> //printf
-
+#include "debug.h"
 float calc_round_trip_time_ms(struct timeval *start, struct  timeval *end)
 {
     return (float)((end->tv_sec - start->tv_sec) * 1000000 + (end->tv_usec - start->tv_usec)) / 1000.0;
@@ -30,14 +30,17 @@ static float cacl_round_trip_stddev(struct s_ping_session *ping_session, float r
 
 static int calc_lost_packets_percentage(int tramsmitted_packets_count, int received_packets_count)
 {
-    return ((tramsmitted_packets_count - received_packets_count) / tramsmitted_packets_count) * 100;
+    
+    debug_printf(g_ping_session.flags.is_debug, "calculate lost packets. Transmitted: %d, received: %d\n", tramsmitted_packets_count, received_packets_count);
+    
+    return ((float)(tramsmitted_packets_count - received_packets_count) / (float)tramsmitted_packets_count) * 100;
 }
 
 struct s_ping_session_stat calc_ping_session_stat(struct s_ping_session *ping_session)
 {
     struct s_ping_session_stat ping_session_stat;
     
-    ping_session_stat.round_trip_min_ms = ping_session->echo_reply_timeout.tv_sec * 1000 + ping_session->echo_reply_timeout.tv_usec / 1000;
+    ping_session_stat.round_trip_min_ms = ping_session->flags.echo_reply_timeout.tv_sec * 1000 + ping_session->flags.echo_reply_timeout.tv_usec / 1000;
     ping_session_stat.round_trip_max_ms = 0;
     ping_session_stat.round_trip_average = 0;
     ping_session_stat.round_trips_stddev = 0;
@@ -52,7 +55,10 @@ struct s_ping_session_stat calc_ping_session_stat(struct s_ping_session *ping_se
     
     while (i < ping_session->ping_data_arr_next_index)
     {
-        if (ping_session->ping_data_arr[i].received_bytes_count != -1)
+        bool is_received = ping_session->ping_data_arr[i].received_bytes_count != -1;
+        bool is_echo_reply = !ping_session->ping_data_arr[i].is_error_reply;
+        
+        if (is_received && is_echo_reply)
         {
             echo_replies_count++;
        
@@ -90,7 +96,7 @@ struct s_ping_session_stat calc_ping_session_stat(struct s_ping_session *ping_se
 
 void print_statistics(struct s_ping_session_stat *ping_session_stat)
 {
-    printf("--- %s ping statistics ---\n", g_ping_session.host_name);
+    printf("--- %s ping statistics ---\n", g_ping_session.host_from_args);
     //3 packets transmitted, 0 packets received, 100% packet loss
     printf("%d packets transmitted, %d packets received, %d%% packet loss\n", 
         ping_session_stat->transmitted_packets_count, 

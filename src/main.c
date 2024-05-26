@@ -45,29 +45,29 @@ int packet_sequence_number = 0;
 #include "ping_session.h"
 #include "resources.h"
 
-
+#include "parse_flags.h"
 
 int main(int ac, char **av) {
+    init_flags(&g_ping_session.flags);
     
-    if (ac != 3) {
-        printf("Expect 2 arguments: host name and debug flag.");
-    }
-
-    if (strcmp(av[2], "true") == 0)
+    parse_flags(ac, av, &g_ping_session.flags);
+    
+    debug_print_flags(g_ping_session.flags.is_debug, &g_ping_session.flags);
+    
+    if (g_ping_session.flags.print_man_only)
     {
-        g_debug = true;
+        printf("Here goes the man\n");
+        exit(EXIT_SUCCESS);
     }
 
     signal(SIGINT, handle_sigint);
-    g_ping_session.host_name = av[1];
-    g_ping_session.ttl = 63;
-    g_ping_session.echo_reply_timeout.tv_sec = 1;
-    g_ping_session.echo_reply_timeout.tv_usec = 0;
+    g_ping_session.flags.echo_reply_timeout.tv_sec = 1;
+    g_ping_session.flags.echo_reply_timeout.tv_usec = 0;
     bzero(g_ping_session.request_host_str_addr, INET_ADDRSTRLEN);
     g_ping_session.ping_data_arr_count = 0;
     g_ping_session.ping_data_arr_next_index = 0;
-    g_ping_session.interval_between_pings_usec = 1000000;
-
+    g_ping_session.flags.interval_between_pings_usec = 1000000;
+    g_ping_session.id = getpid();
     init_resouces();
     //--------------------------resolve host passed as an argument
     struct addrinfo hints;
@@ -76,13 +76,14 @@ int main(int ac, char **av) {
     hints.ai_socktype = SOCK_RAW; // Raw socket for ICMP
     hints.ai_protocol = IPPROTO_ICMP; // ICMP protocol
     
-    int result = getaddrinfo(av[1], NULL, &hints, &g_resources.addr_info);
+    int result = getaddrinfo(g_ping_session.host_from_args, NULL, &hints, &g_resources.addr_info);
+
     if (result != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(result)); //real ping prints: ping: host unknown in case of blabla host
+        fprintf(stderr, "%s: unknown host\n", av[0]);
         free_resources();
         exit(EXIT_ERROR);
     }
-
+    
     //here i cast struct sockaddr* to struct sockaddr_in* because ai_addr may contain different address structures: struct sockaddr_in* - for ipv4, struct sockaddr_in6* for ipv6
     struct sockaddr_in remote_host_net_addr = *((struct sockaddr_in*) (g_resources.addr_info)->ai_addr);
     
@@ -97,13 +98,23 @@ int main(int ac, char **av) {
     //---------------------open socket
     g_resources.fd_socket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (g_resources.fd_socket == -1) {
-        fprintf(stderr, "socket: %s\n", strerror(errno));
+        perror("socket");
         free_resources();
         exit(EXIT_ERROR);
     }
     
-    setsockopt(g_resources.fd_socket, SOL_SOCKET, SO_RCVTIMEO, (const void*)&g_ping_session.echo_reply_timeout, sizeof(struct timeval));
+    if (setsockopt(g_resources.fd_socket, SOL_SOCKET, SO_RCVTIMEO, (const void*)&g_ping_session.flags.echo_reply_timeout, sizeof(struct timeval)) != 0)
+    {
+        perror("setsockopt");
+        free_resources();
+        exit(EXIT_FAILURE);
+    }
     
+    if (setsockopt(g_resources.fd_socket, IPPROTO_IP, IP_TTL, &g_ping_session.flags.ttl, sizeof(g_ping_session.flags.ttl)) != 0) {
+        perror("setsockopt");
+        free_resources();
+        exit(EXIT_FAILURE);
+    }
     //----------------------create packet;
     struct s_icmp_echo_packet icmp_request_packet = create_icmp_echo_request_packet();
     
@@ -122,10 +133,17 @@ int main(int ac, char **av) {
         
         if (ping_data.received_bytes_count != -1)
         {
-            print_icmp_echo_reply(&ping_data);
+            if (!ping_data.is_error_reply)
+            {
+                print_icmp_echo_reply(&ping_data);
+            }
+            else
+            {
+                print_icmp_error_reply(&ping_data);
+            }
         }
         
-        usleep(g_ping_session.interval_between_pings_usec);
+        usleep(g_ping_session.flags.interval_between_pings_usec);
         //printf("Round trip time microsec %d\n", round_trip_time_microsec);
         //calculate and print statistics.
         //why first ping is from 0.0.0.0?
@@ -134,3 +152,12 @@ int main(int ac, char **av) {
     }
     return 0;
 }
+// in order to see how my ping works in case of lost packets, I have to 
+// modify timeout, lower it
+
+//Handle situation when there is no internet conncection. it looks like getaddress blocks!!!
+//calc checksum when ping is received back
+//don't forget sudo, so ping works without sudo
+
+
+//next step is to figure out why hex line is different from real ping hex line

@@ -3,6 +3,8 @@
 
 #include <unistd.h>
 
+#include "exit_constants.h"
+
 struct s_resources g_resources;
 
 void init_resouces()
