@@ -47,6 +47,16 @@ int packet_sequence_number = 0;
 
 #include "parse_flags.h"
 
+static void print_man() {
+    printf("Usage: ping [OPTION...] HOST ...\n");
+    printf("Send ICMP ECHO_REQUEST packets to network hosts.\n");
+    printf("Options:\n");
+    printf("-d, --debug              print debug info\n");
+    printf("-v, --verbose            verbose output\n");
+    printf("    --ttl=NUM            specify N as time-to-live\n");
+    printf("-?, --help, --usage      give this help list\n");
+}
+
 int main(int ac, char **av) {
     init_flags(&g_ping_session.flags);
     
@@ -56,7 +66,7 @@ int main(int ac, char **av) {
     
     if (g_ping_session.flags.print_man_only)
     {
-        printf("Here goes the man\n");
+        print_man();
         exit(EXIT_SUCCESS);
     }
 

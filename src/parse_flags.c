@@ -94,6 +94,10 @@ void parse_flags(int ac, char **argv, struct s_flags *flags)
     {
         g_ping_session.host_from_args = argv[optind];
     }
+    else if (g_ping_session.flags.print_man_only)
+    {
+        return;
+    }
     else
     {
         fprintf(stderr, "%s: missing host operand\n", argv[0]);
