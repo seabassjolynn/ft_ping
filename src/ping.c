@@ -15,6 +15,9 @@
 //memeset
 #include <string.h>
 
+//sleep
+#include <unistd.h>
+
 #include "net.h"
 #include "ping_session.h"
 
@@ -53,6 +56,8 @@ struct s_ping_data ping(struct s_icmp_echo_packet echo_request)
     struct s_ping_data ping_data;
     
     ping_data.time_start = get_time();
+    ping_data.time_end.tv_sec = -1;
+    ping_data.time_end.tv_usec = -1;
     
     int sendResult = sendto(g_resources.fd_socket, &echo_request_copy, ECHO_PACKET_LENGTH, 0, (g_resources.addr_info)->ai_addr, (g_resources.addr_info)->ai_addrlen);
     
@@ -63,7 +68,8 @@ struct s_ping_data ping(struct s_icmp_echo_packet echo_request)
         exit(EXIT_ERROR);
     }
     
-    
+    g_ping_session.sent_echo_count++;
+
     while(true)
     {   
         uint8_t received_ip_packet[IP_PACKET_BUFFER_LENGTH];
@@ -88,13 +94,12 @@ struct s_ping_data ping(struct s_icmp_echo_packet echo_request)
             {
                 if (is_pair(&echo_request.header, &received_icmp_packet->header))
                 {
+                    ping_data.time_end = get_time();
                     ping_data.icmp_seq_number = echo_request.header.sequence_number;
                     ping_data.is_error_reply = false;
                     
                     bzero(ping_data.reply_host_str_addr, INET_ADDRSTRLEN);
                     get_srs_ip_addr_from_ip_packet_as_str(received_ip_packet, ping_data.reply_host_str_addr);
-                
-                    ping_data.time_end = get_time();
                     return ping_data;
                 }
                 else

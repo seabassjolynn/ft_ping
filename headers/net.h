@@ -34,6 +34,8 @@ uint16_t caclulate_checksum(void *addr, int len);
 
 #define ORIGINAL_DATAGRAM_FRAGMENT_LENGTH_IN_ERROR_REPLY 64
 
+#define RECV_FROM_TIME_OUT -1
+
 # include <stdint.h>
 # include <stdbool.h>
 

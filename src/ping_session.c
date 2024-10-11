@@ -151,12 +151,15 @@ void add_to_ping_session(struct s_ping_data *ping_data)
     g_ping_session.ping_data_arr_next_index++;
 }
 
-void init_flags(struct s_flags *flags)
+void set_defaults(struct s_flags *flags)
 {
     flags->ttl = 63;
     flags->is_verbose = false;
     flags->print_man_only = false;
     flags->is_debug = false;
+    flags->echo_reply_timeout.tv_sec = 1;
+    flags->echo_reply_timeout.tv_usec = 0;
+    flags->count = -1;
 }
 
 void debug_print_flags(bool is_debug_mode, struct s_flags *flags)
@@ -166,6 +169,7 @@ void debug_print_flags(bool is_debug_mode, struct s_flags *flags)
     debug_printf(is_debug_mode, "-? = %s\n", flags->print_man_only ? "true" : "false");
     debug_printf(is_debug_mode, "--ttl = %d\n", flags->ttl);
     debug_printf(is_debug_mode, "-d --debug = %s\n", flags->is_debug ? "true" : "false");
+    debug_printf(is_debug_mode, "--count = %d\n", flags->count);
 }
 
 // when socket is created - set timeout for socket and ttl. These 2 things should be set outside ping function, because this setups are applicable to all pings in ping session

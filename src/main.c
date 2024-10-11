@@ -47,6 +47,8 @@ int packet_sequence_number = 0;
 
 #include "parse_flags.h"
 
+#include "ping_session_stat.h"
+
 static void print_man() {
     printf("Usage: ping [OPTION...] HOST ...\n");
     printf("Send ICMP ECHO_REQUEST packets to network hosts.\n");
@@ -55,10 +57,11 @@ static void print_man() {
     printf("-v, --verbose            verbose output\n");
     printf("    --ttl=NUM            specify N as time-to-live\n");
     printf("-?, --help, --usage      give this help list\n");
+    printf("-c, --count=NUMBER         stop after sending NUMBER packets\n");
 }
 
 int main(int ac, char **av) {
-    init_flags(&g_ping_session.flags);
+    set_defaults(&g_ping_session.flags);
     
     parse_flags(ac, av, &g_ping_session.flags);
     
@@ -71,8 +74,7 @@ int main(int ac, char **av) {
     }
 
     signal(SIGINT, handle_sigint);
-    g_ping_session.flags.echo_reply_timeout.tv_sec = 1;
-    g_ping_session.flags.echo_reply_timeout.tv_usec = 0;
+    
     bzero(g_ping_session.request_host_str_addr, INET_ADDRSTRLEN);
     g_ping_session.ping_data_arr_count = 0;
     g_ping_session.ping_data_arr_next_index = 0;
@@ -112,14 +114,14 @@ int main(int ac, char **av) {
         free_resources();
         exit(EXIT_ERROR);
     }
-    
+
     if (setsockopt(g_resources.fd_socket, SOL_SOCKET, SO_RCVTIMEO, (const void*)&g_ping_session.flags.echo_reply_timeout, sizeof(struct timeval)) != 0)
     {
         perror("setsockopt");
         free_resources();
         exit(EXIT_FAILURE);
     }
-    
+
     if (setsockopt(g_resources.fd_socket, IPPROTO_IP, IP_TTL, &g_ping_session.flags.ttl, sizeof(g_ping_session.flags.ttl)) != 0) {
         perror("setsockopt");
         free_resources();
@@ -131,35 +133,45 @@ int main(int ac, char **av) {
     //-------------------- print ping header
     print_ping_session_header();
     
-    while (true)
+    g_ping_session.sent_echo_count = 0;
+    int i = 0;
+    
+    while (g_ping_session.flags.count == -1 || i < g_ping_session.flags.count)
     {
         icmp_request_packet.header.sequence_number++;
         icmp_request_packet.header.checksum = 0; //For computing the checksum , the checksum field should be zero. 
         icmp_request_packet.header.checksum = caclulate_checksum(&icmp_request_packet, ECHO_PACKET_LENGTH);
-    
+        
         struct s_ping_data ping_data = ping(icmp_request_packet);
         
-        add_to_ping_session(&ping_data);
-        
-        if (ping_data.received_bytes_count != -1)
+        if (is_replied(&ping_data) && !ping_data.is_error_reply)
         {
-            if (!ping_data.is_error_reply)
-            {
-                print_icmp_echo_reply(&ping_data);
-            }
-            else
-            {
-                print_icmp_error_reply(&ping_data);
-            }
+            add_to_ping_session(&ping_data);
         }
         
+        if (ping_data.is_error_reply)
+        {
+            print_icmp_error_reply(&ping_data);
+        }
+        else if (is_replied(&ping_data))
+        {
+            print_icmp_echo_reply(&ping_data);
+        }
+         
         usleep(g_ping_session.flags.interval_between_pings_usec);
         //printf("Round trip time microsec %d\n", round_trip_time_microsec);
         //calculate and print statistics.
         //why first ping is from 0.0.0.0?
         //may be if received sock addr len is 0 or addr is 0,0.0.0 I just use request addr?
         //why my ping returns another quantity of bytes?
+        i++;
     }
+    
+    struct s_ping_session_stat ping_session_stat = calc_ping_session_stat(&g_ping_session);
+    
+    print_statistics(&ping_session_stat);
+    
+    free_resources();
     return 0;
 }
 // in order to see how my ping works in case of lost packets, I have to 

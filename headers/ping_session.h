@@ -30,9 +30,10 @@ struct s_flags
     struct timeval echo_reply_timeout;
     int interval_between_pings_usec;
     bool is_debug;
+    int count;
 };
 
-void init_flags(struct s_flags *flags);
+void set_defaults(struct s_flags *flags);
 
 void debug_print_flags(bool is_debug_mode, struct s_flags *flags);
 
@@ -41,6 +42,7 @@ struct s_ping_session
     char* host_from_args;
     uint32_t id;
     char request_host_str_addr[INET_ADDRSTRLEN];
+    uint64_t sent_echo_count;
     struct s_ping_data *ping_data_arr;
     int ping_data_arr_count;
     int ping_data_arr_next_index;
