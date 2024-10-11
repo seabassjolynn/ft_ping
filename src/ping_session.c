@@ -160,6 +160,7 @@ void set_defaults(struct s_flags *flags)
     flags->echo_reply_timeout.tv_sec = 1;
     flags->echo_reply_timeout.tv_usec = 0;
     flags->count = -1;
+    flags->timeout = -1;
 }
 
 void debug_print_flags(bool is_debug_mode, struct s_flags *flags)
@@ -170,6 +171,7 @@ void debug_print_flags(bool is_debug_mode, struct s_flags *flags)
     debug_printf(is_debug_mode, "--ttl = %d\n", flags->ttl);
     debug_printf(is_debug_mode, "-d --debug = %s\n", flags->is_debug ? "true" : "false");
     debug_printf(is_debug_mode, "--count = %d\n", flags->count);
+    debug_printf(is_debug_mode, "--timeout = %d\n", flags->timeout);
 }
 
 // when socket is created - set timeout for socket and ttl. These 2 things should be set outside ping function, because this setups are applicable to all pings in ping session

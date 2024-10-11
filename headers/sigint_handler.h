@@ -3,4 +3,6 @@
 
 void handle_sigint(int sig);
 
+void handle_sigalarm(int sig);
+
 #endif

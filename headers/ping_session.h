@@ -31,6 +31,7 @@ struct s_flags
     int interval_between_pings_usec;
     bool is_debug;
     int count;
+    int timeout;
 };
 
 void set_defaults(struct s_flags *flags);
@@ -47,6 +48,7 @@ struct s_ping_session
     int ping_data_arr_count;
     int ping_data_arr_next_index;
     struct s_flags flags;
+    int timeout;
 };
 
 extern struct s_ping_session g_ping_session;

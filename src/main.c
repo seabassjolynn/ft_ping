@@ -57,7 +57,8 @@ static void print_man() {
     printf("-v, --verbose            verbose output\n");
     printf("    --ttl=NUM            specify N as time-to-live\n");
     printf("-?, --help, --usage      give this help list\n");
-    printf("-c, --count=NUMBER         stop after sending NUMBER packets\n");
+    printf("-c, --count=NUMBER       stop after sending NUMBER packets\n");
+    printf("-w, --timeout=N          stop after N seconds\n");
 }
 
 int main(int ac, char **av) {
@@ -74,7 +75,12 @@ int main(int ac, char **av) {
     }
 
     signal(SIGINT, handle_sigint);
-    
+    if (g_ping_session.flags.timeout != -1)
+    {
+        signal(SIGALRM, handle_sigalarm);
+        alarm(g_ping_session.flags.timeout);
+    }
+
     bzero(g_ping_session.request_host_str_addr, INET_ADDRSTRLEN);
     g_ping_session.ping_data_arr_count = 0;
     g_ping_session.ping_data_arr_next_index = 0;

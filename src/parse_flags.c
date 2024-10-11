@@ -11,7 +11,7 @@
 #include <getopt.h> //get_long_opt
 
 
-static int parse_numeric_flag(char *str_value, char *program_name)
+static int parse_positive_int(char *str_value, char *program_name)
 {
     int value = -1;
     value = atoi(str_value);
@@ -44,11 +44,12 @@ void parse_flags(int ac, char **argv, struct s_flags *flags)
         {"help", no_argument, 0, 'h'},
         {"usage", no_argument, 0, 'u'},
         {"count", required_argument, 0, 'c'},
+        {"timeout", required_argument, 0, 'w'},
         {0, 0, 0, 0}
     };
 
     while (1) {
-        int c = getopt_long(ac, argv, "vd?hut:c:", long_options, &option_index);
+        int c = getopt_long(ac, argv, "vd?hut:c:w:", long_options, &option_index);
 
         // End of options
         if (c == -1) {
@@ -71,10 +72,13 @@ void parse_flags(int ac, char **argv, struct s_flags *flags)
                 c = -1; //stop parsing flags error messages about unknown flags are not printed.
                 break;
             case 't':
-                g_ping_session.flags.ttl = parse_numeric_flag(optarg, argv[0]);
+                g_ping_session.flags.ttl = parse_positive_int(optarg, argv[0]);
                 break;
             case 'c':
-                g_ping_session.flags.count = parse_numeric_flag(optarg, argv[0]);
+                g_ping_session.flags.count = parse_positive_int(optarg, argv[0]);
+                break;
+            case 'w':
+                g_ping_session.flags.timeout = parse_positive_int(optarg, argv[0]);
                 break;
             case 'v':
                 g_ping_session.flags.is_verbose = true;

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "resources.h"
 #include "ping_session_stat.h"
+#include <signal.h>
 
 void handle_sigint(int sig)
 {
@@ -15,4 +16,9 @@ void handle_sigint(int sig)
     free_resources();    
     
     exit(EXIT_SUCCESS);
+}
+
+void handle_sigalarm(int sig)
+{
+    raise(SIGINT);
 }
