@@ -22,6 +22,4 @@ struct s_ping_session_stat calc_ping_session_stat(struct s_ping_session *ping_se
 
 void print_statistics(struct s_ping_session_stat *ping_session_stat);
 
-bool is_replied(struct s_ping_data *ping_data);
-
 #endif

@@ -130,13 +130,13 @@ void print_icmp_error_reply(struct s_ping_data *ping_data)
 
 void add_to_ping_session(struct s_ping_data *ping_data)
 {
-    debug_printf(g_ping_session.flags.is_debug, "add_to_ping_session. Data count: %d, index: %d\n", g_ping_session.ping_data_arr_count, g_ping_session.ping_data_arr_next_index);
+    debug_printf(g_ping_session.flags.is_debug, "add_to_ping_session. Ping data storage capacity: %d, index: %d\n", g_ping_session.ping_data_arr_count, g_ping_session.ping_data_arr_next_index);
     
     if (g_ping_session.ping_data_arr_next_index == g_ping_session.ping_data_arr_count)
     {
         g_ping_session.ping_data_arr_count += 10;
         
-        debug_printf(g_ping_session.flags.is_debug, "New data count: %d\n", g_ping_session.ping_data_arr_count);
+        debug_printf(g_ping_session.flags.is_debug, "New ping data storage capacity: %d\n", g_ping_session.ping_data_arr_count);
 
         g_ping_session.ping_data_arr = realloc(g_ping_session.ping_data_arr, sizeof(struct s_ping_data) * g_ping_session.ping_data_arr_count);
         if (g_ping_session.ping_data_arr == NULL)
@@ -157,8 +157,8 @@ void set_defaults(struct s_flags *flags)
     flags->is_verbose = false;
     flags->print_man_only = false;
     flags->is_debug = false;
-    flags->echo_reply_timeout.tv_sec = 1;
-    flags->echo_reply_timeout.tv_usec = 0;
+    flags->linger.tv_sec = 1;
+    flags->linger.tv_usec = 0;
     flags->count = -1;
     flags->timeout = -1;
 }
@@ -172,6 +172,7 @@ void debug_print_flags(bool is_debug_mode, struct s_flags *flags)
     debug_printf(is_debug_mode, "-d --debug = %s\n", flags->is_debug ? "true" : "false");
     debug_printf(is_debug_mode, "--count = %d\n", flags->count);
     debug_printf(is_debug_mode, "--timeout = %d\n", flags->timeout);
+    debug_printf(is_debug_mode, "--linger = %d\n", flags->linger.tv_sec);
 }
 
 // when socket is created - set timeout for socket and ttl. These 2 things should be set outside ping function, because this setups are applicable to all pings in ping session

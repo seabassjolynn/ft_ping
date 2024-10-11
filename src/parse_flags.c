@@ -45,11 +45,12 @@ void parse_flags(int ac, char **argv, struct s_flags *flags)
         {"usage", no_argument, 0, 'u'},
         {"count", required_argument, 0, 'c'},
         {"timeout", required_argument, 0, 'w'},
+        {"linger", required_argument, 0, 'W'},
         {0, 0, 0, 0}
     };
 
     while (1) {
-        int c = getopt_long(ac, argv, "vd?hut:c:w:", long_options, &option_index);
+        int c = getopt_long(ac, argv, "vd?hut:c:w:W:", long_options, &option_index);
 
         // End of options
         if (c == -1) {
@@ -79,6 +80,9 @@ void parse_flags(int ac, char **argv, struct s_flags *flags)
                 break;
             case 'w':
                 g_ping_session.flags.timeout = parse_positive_int(optarg, argv[0]);
+                break;
+            case 'W':
+                g_ping_session.flags.linger.tv_sec = parse_positive_int(optarg, argv[0]);
                 break;
             case 'v':
                 g_ping_session.flags.is_verbose = true;

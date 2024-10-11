@@ -59,13 +59,14 @@ static void print_man() {
     printf("-?, --help, --usage      give this help list\n");
     printf("-c, --count=NUMBER       stop after sending NUMBER packets\n");
     printf("-w, --timeout=N          stop after N seconds\n");
+    printf("-W, --linger=N           number of seconds to wait for response\n");
 }
 
 int main(int ac, char **av) {
     set_defaults(&g_ping_session.flags);
     
     parse_flags(ac, av, &g_ping_session.flags);
-    
+
     debug_print_flags(g_ping_session.flags.is_debug, &g_ping_session.flags);
     
     if (g_ping_session.flags.print_man_only)
@@ -121,7 +122,7 @@ int main(int ac, char **av) {
         exit(EXIT_ERROR);
     }
 
-    if (setsockopt(g_resources.fd_socket, SOL_SOCKET, SO_RCVTIMEO, (const void*)&g_ping_session.flags.echo_reply_timeout, sizeof(struct timeval)) != 0)
+    if (setsockopt(g_resources.fd_socket, SOL_SOCKET, SO_RCVTIMEO, (const void*)&g_ping_session.flags.linger, sizeof(struct timeval)) != 0)
     {
         perror("setsockopt");
         free_resources();
@@ -150,18 +151,14 @@ int main(int ac, char **av) {
         
         struct s_ping_data ping_data = ping(icmp_request_packet);
         
-        if (is_replied(&ping_data) && !ping_data.is_error_reply)
+        if (ping_data.received_bytes_count != TIME_OUT && !ping_data.is_error_reply)
         {
             add_to_ping_session(&ping_data);
-        }
-        
-        if (ping_data.is_error_reply)
+            print_icmp_echo_reply(&ping_data);
+        } 
+        else if (ping_data.is_error_reply)
         {
             print_icmp_error_reply(&ping_data);
-        }
-        else if (is_replied(&ping_data))
-        {
-            print_icmp_echo_reply(&ping_data);
         }
          
         usleep(g_ping_session.flags.interval_between_pings_usec);

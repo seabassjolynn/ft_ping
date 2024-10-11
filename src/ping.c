@@ -56,8 +56,7 @@ struct s_ping_data ping(struct s_icmp_echo_packet echo_request)
     struct s_ping_data ping_data;
     
     ping_data.time_start = get_time();
-    ping_data.time_end.tv_sec = -1;
-    ping_data.time_end.tv_usec = -1;
+    ping_data.is_error_reply = false;
     
     int sendResult = sendto(g_resources.fd_socket, &echo_request_copy, ECHO_PACKET_LENGTH, 0, (g_resources.addr_info)->ai_addr, (g_resources.addr_info)->ai_addrlen);
     

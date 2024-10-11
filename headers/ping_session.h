@@ -27,7 +27,7 @@ struct s_flags
     bool print_man_only;
     bool is_verbose;
     int ttl;
-    struct timeval echo_reply_timeout;
+    struct timeval linger;
     int interval_between_pings_usec;
     bool is_debug;
     int count;

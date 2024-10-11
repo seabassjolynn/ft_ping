@@ -34,16 +34,11 @@ static int calc_lost_packets_percentage(int sent_packets_count, int received_pac
     return ((float)(sent_packets_count - received_packets_count) / (float)sent_packets_count) * 100;
 }
 
-bool is_replied(struct s_ping_data *ping_data)
-{
-    return ping_data->time_end.tv_sec > 0 || ping_data->time_end.tv_usec > 0;
-}
-
 struct s_ping_session_stat calc_ping_session_stat(struct s_ping_session *ping_session)
 {
     struct s_ping_session_stat ping_session_stat;
     
-    ping_session_stat.round_trip_min_ms = ping_session->flags.echo_reply_timeout.tv_sec * 1000 + ping_session->flags.echo_reply_timeout.tv_usec / 1000;
+    ping_session_stat.round_trip_min_ms = ping_session->flags.linger.tv_sec * 1000 + ping_session->flags.linger.tv_usec / 1000;
     ping_session_stat.round_trip_max_ms = 0;
     ping_session_stat.round_trip_average = 0;
     ping_session_stat.round_trips_stddev = 0;
