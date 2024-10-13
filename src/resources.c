@@ -10,13 +10,13 @@ struct s_resources g_resources;
 void init_resouces()
 {
     g_resources.fd_socket = -1;
-    g_resources.addr_info = NULL;
+    g_resources.target_addr_info = NULL;
     g_resources.ping_data_arr = NULL;
 }
 
 void free_resources()
 {
     close(g_resources.fd_socket);
-    freeaddrinfo(g_resources.addr_info);
+    freeaddrinfo(g_resources.target_addr_info);
     free(g_resources.ping_data_arr);
 }

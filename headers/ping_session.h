@@ -10,6 +10,8 @@
 #include <stdbool.h>
 #define ERROR_REPLY_CODE_DESCRIPTION_BUFFER_SIZE 255
 
+extern struct s_ping_session g_ping_session;
+
 struct s_ping_data
 {
     struct timeval time_start;
@@ -34,15 +36,11 @@ struct s_flags
     int timeout;
 };
 
-void set_defaults(struct s_flags *flags);
-
-void debug_print_flags(bool is_debug_mode, struct s_flags *flags);
-
 struct s_ping_session
 {
-    char* host_from_args;
+    char* target_arg;
     uint32_t id;
-    char request_host_str_addr[INET_ADDRSTRLEN];
+    char target_addr[INET_ADDRSTRLEN];
     uint64_t sent_echo_count;
     struct s_ping_data *ping_data_arr;
     int ping_data_arr_count;
@@ -51,7 +49,7 @@ struct s_ping_session
     int timeout;
 };
 
-extern struct s_ping_session g_ping_session;
+void init();
 
 void print_icmp_echo_reply(struct s_ping_data *ping_data);
 
@@ -59,6 +57,8 @@ void print_icmp_error_reply(struct s_ping_data *ping_data);
 
 void add_to_ping_session(struct s_ping_data *ping_data);
 
-void print_ping_session_header();
+void print_ping_header();
+
+void configure_socket();
 
 #endif

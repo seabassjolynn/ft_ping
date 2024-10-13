@@ -2,6 +2,8 @@
 
 //NULL definition
 #include "stdlib.h"
+//getpid()
+#include <unistd.h>
 
 #include "exit_constants.h"
 
@@ -14,9 +16,9 @@
 
 struct s_ping_session g_ping_session;
 
-void print_ping_session_header()
+void print_ping_header()
 {
-    printf("PING %s (%s): %d data bytes", g_ping_session.host_from_args, g_ping_session.request_host_str_addr, ECHO_PACKET_BODY_LENGTH);
+    printf("PING %s (%s): %d data bytes", g_ping_session.target_arg, g_ping_session.target_addr, ECHO_PACKET_BODY_LENGTH);
     
     if (g_ping_session.flags.is_verbose)
     {
@@ -49,7 +51,6 @@ static void print_original_ip_header_hex_dump(struct s_ip_header *ip_header)
     }
     printf("\n");
 }
-
 
 static int get_ecn(struct s_ip_header *ip_header)
 {
@@ -88,10 +89,10 @@ static void print_original_ip_header(struct s_ip_header *ip_header)
     uint16_t checksum = ntohs(ip_header->header_checksum);
     
     char src_addr[INET_ADDRSTRLEN];
-    ipv4_network_to_str(ip_header->src_address, src_addr); 
+    int_addr_to_ipv4_addr_str(ip_header->src_address, src_addr); 
     
     char dst_addr[INET6_ADDRSTRLEN];
-    ipv4_network_to_str(ip_header->dst_address, dst_addr);
+    int_addr_to_ipv4_addr_str(ip_header->dst_address, dst_addr);
 
     printf(" %d  ", ip_version);
     printf("%d  ", ihl);
@@ -130,13 +131,13 @@ void print_icmp_error_reply(struct s_ping_data *ping_data)
 
 void add_to_ping_session(struct s_ping_data *ping_data)
 {
-    debug_printf(g_ping_session.flags.is_debug, "add_to_ping_session. Ping data storage capacity: %d, index: %d\n", g_ping_session.ping_data_arr_count, g_ping_session.ping_data_arr_next_index);
+    debug_printf("add_to_ping_session. Ping data storage capacity: %d, index: %d\n", g_ping_session.ping_data_arr_count, g_ping_session.ping_data_arr_next_index);
     
     if (g_ping_session.ping_data_arr_next_index == g_ping_session.ping_data_arr_count)
     {
         g_ping_session.ping_data_arr_count += 10;
         
-        debug_printf(g_ping_session.flags.is_debug, "New ping data storage capacity: %d\n", g_ping_session.ping_data_arr_count);
+        debug_printf("New ping data storage capacity: %d\n", g_ping_session.ping_data_arr_count);
 
         g_ping_session.ping_data_arr = realloc(g_ping_session.ping_data_arr, sizeof(struct s_ping_data) * g_ping_session.ping_data_arr_count);
         if (g_ping_session.ping_data_arr == NULL)
@@ -151,36 +152,25 @@ void add_to_ping_session(struct s_ping_data *ping_data)
     g_ping_session.ping_data_arr_next_index++;
 }
 
-void set_defaults(struct s_flags *flags)
+void init()
 {
-    flags->ttl = 63;
-    flags->is_verbose = false;
-    flags->print_man_only = false;
-    flags->is_debug = false;
-    flags->linger.tv_sec = 1;
-    flags->linger.tv_usec = 0;
-    flags->count = -1;
-    flags->timeout = -1;
+    g_ping_session.flags.ttl = 63;
+    g_ping_session.flags.is_verbose = false;
+    g_ping_session.flags.print_man_only = false;
+    g_ping_session.flags.is_debug = false;
+    g_ping_session.flags.linger.tv_sec = 1;
+    g_ping_session.flags.linger.tv_usec = 0;
+    g_ping_session.flags.count = -1;
+    g_ping_session.flags.timeout = -1;
+
+    bzero(g_ping_session.target_addr, INET_ADDRSTRLEN);
+    g_ping_session.ping_data_arr_count = 0;
+    g_ping_session.ping_data_arr_next_index = 0;
+    g_ping_session.flags.interval_between_pings_usec = 1000000;
+    
+    g_ping_session.id = getpid();
 }
 
-void debug_print_flags(bool is_debug_mode, struct s_flags *flags)
-{
-    debug_print(is_debug_mode, "---program flags---\n");
-    debug_printf(is_debug_mode, "-v, --verbose = %s\n", flags->is_verbose ? "true" : "false");
-    debug_printf(is_debug_mode, "-? = %s\n", flags->print_man_only ? "true" : "false");
-    debug_printf(is_debug_mode, "--ttl = %d\n", flags->ttl);
-    debug_printf(is_debug_mode, "-d --debug = %s\n", flags->is_debug ? "true" : "false");
-    debug_printf(is_debug_mode, "--count = %d\n", flags->count);
-    debug_printf(is_debug_mode, "--timeout = %d\n", flags->timeout);
-    debug_printf(is_debug_mode, "--linger = %d\n", flags->linger.tv_sec);
-}
-
-// when socket is created - set timeout for socket and ttl. These 2 things should be set outside ping function, because this setups are applicable to all pings in ping session
-// not a concrete ping
-// rename s_pinging_statistics to s_ping_session_statistics
-
-
-//
 
 
 

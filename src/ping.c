@@ -58,7 +58,7 @@ struct s_ping_data ping(struct s_icmp_echo_packet echo_request)
     ping_data.time_start = get_time();
     ping_data.is_error_reply = false;
     
-    int sendResult = sendto(g_resources.fd_socket, &echo_request_copy, ECHO_PACKET_LENGTH, 0, (g_resources.addr_info)->ai_addr, (g_resources.addr_info)->ai_addrlen);
+    int sendResult = sendto(g_resources.fd_socket, &echo_request_copy, ECHO_PACKET_LENGTH, 0, (g_resources.target_addr_info)->ai_addr, (g_resources.target_addr_info)->ai_addrlen);
     
     if (sendResult < 0) 
     {
@@ -66,8 +66,6 @@ struct s_ping_data ping(struct s_icmp_echo_packet echo_request)
         free_resources();
         exit(EXIT_ERROR);
     }
-    
-    g_ping_session.sent_echo_count++;
 
     while(true)
     {   
@@ -76,7 +74,7 @@ struct s_ping_data ping(struct s_icmp_echo_packet echo_request)
         ping_data.received_bytes_count = recvfrom(g_resources.fd_socket, received_ip_packet, IP_PACKET_BUFFER_LENGTH, 0, NULL, NULL);
         if (ping_data.received_bytes_count > 0)
         {
-            debug_printf(g_ping_session.flags.is_debug, "Reply length: %ld\n", ping_data.received_bytes_count);
+            debug_printf("Reply length: %ld\n", ping_data.received_bytes_count);
             
             int ip_header_length = get_ip_header_length_in_bytes(received_ip_packet);
             if (ip_header_length != sizeof(struct s_ip_header))
@@ -98,18 +96,18 @@ struct s_ping_data ping(struct s_icmp_echo_packet echo_request)
                     ping_data.is_error_reply = false;
                     
                     bzero(ping_data.reply_host_str_addr, INET_ADDRSTRLEN);
-                    get_srs_ip_addr_from_ip_packet_as_str(received_ip_packet, ping_data.reply_host_str_addr);
+                    get_src_ipv4_addr_str(received_ip_packet, ping_data.reply_host_str_addr);
                     return ping_data;
                 }
                 else
                 {
-                    debug_printf(g_ping_session.flags.is_debug, "Received unexpected icpm reply. id / seq num of request: %d %d, id / seq num of reply: %d %d\n", echo_request.header.identifier, echo_request.header.sequence_number, received_icmp_packet->header.identifier, received_icmp_packet->header.sequence_number);
+                    debug_printf("Received unexpected icpm reply. id / seq num of request: %d %d, id / seq num of reply: %d %d\n", echo_request.header.identifier, echo_request.header.sequence_number, received_icmp_packet->header.identifier, received_icmp_packet->header.sequence_number);
                 }
                 //continue - read packet again.
             }
             else if (is_ping_error_reply(received_icmp_packet->header.type))
             {
-                debug_print(g_ping_session.flags.is_debug, "Received error ping reply\n");
+                debug_print("Received error ping reply\n");
                 
                 struct s_error_ping_reply *error_ping_reply = (struct s_error_ping_reply *) (received_ip_packet + ip_header_length);
                 
@@ -118,7 +116,7 @@ struct s_ping_data ping(struct s_icmp_echo_packet echo_request)
                     ping_data.is_error_reply = true;
                     
                     bzero(ping_data.reply_host_str_addr, INET_ADDRSTRLEN);
-                    get_srs_ip_addr_from_ip_packet_as_str(received_ip_packet, ping_data.reply_host_str_addr);
+                    get_src_ipv4_addr_str(received_ip_packet, ping_data.reply_host_str_addr);
                     
                     bzero(ping_data.error_reply_code_description, ERROR_REPLY_CODE_DESCRIPTION_BUFFER_SIZE);
                     get_error_reply_code_description(error_ping_reply->type, error_ping_reply->code, ping_data.error_reply_code_description);
@@ -130,24 +128,20 @@ struct s_ping_data ping(struct s_icmp_echo_packet echo_request)
                 }
                 else
                 {
-                    debug_printf(g_ping_session.flags.is_debug, "Received unexpected icpm error reply. id / seq num of request: %d %d, id / seq num of reply: %d %d\n", echo_request.header.identifier, echo_request.header.sequence_number, error_ping_reply->original_data.ping_header.identifier, error_ping_reply->original_data.ping_header.sequence_number);
+                    debug_printf("Received unexpected icpm error reply. id / seq num of request: %d %d, id / seq num of reply: %d %d\n", echo_request.header.identifier, echo_request.header.sequence_number, error_ping_reply->original_data.ping_header.identifier, error_ping_reply->original_data.ping_header.sequence_number);
                 }
             } 
             else 
             {
-                debug_printf(g_ping_session.flags.is_debug, "Received unhandled type of ping. Type: %d\n", received_icmp_packet->header.code);
+                debug_printf("Received unhandled type of ping. Type: %d\n", received_icmp_packet->header.code);
             }
 
         }
         else
         {
-            // struct s_icmp_echo_packet r = *((struct s_icmp_echo_packet *) (receivedPacket + 20));
-            // printf("Received ICMP reply. Id: %d sequence num: %d\n", r.header.identifier, r.header.sequence_number);
-            debug_print(g_ping_session.flags.is_debug, "ping timeout\n");
+            debug_print("ping timeout\n");
             return ping_data;
         }
     }
 }
 
-// I still have probelm that I receive 76 bytes, But this is probably because my buffer is 76 bytes, but in wire shark I see that I receive 84 bytes,
-// which makes sense 20 bytes - ip header and 64 bytes - ICPM reply length

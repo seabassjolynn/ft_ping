@@ -5,9 +5,9 @@ APP_NAME=ft_ping #create variable called APP_NAME and assign value to it which i
 # sources
 SRCS_DIR = src
 HEADERS_DIR = headers
-SRCS = $(addprefix $(SRCS_DIR)/, main.c sigint_handler.c ping_session.c resources.c ping.c net.c debug.c ping_session_stat.c parse_flags.c)
+SRCS = $(addprefix $(SRCS_DIR)/, main.c sigint_handler.c ping_session.c resources.c ping.c net.c debug.c ping_session_stat.c parse_args.c)
 
-HEADERS = $(addprefix $(HEADERS_DIR)/, ping_session.h sigint_handler.h exit_constants.h resources.h ping.h net.h debug.h ping_session_stat.h parse_flags.h)
+HEADERS = $(addprefix $(HEADERS_DIR)/, ping_session.h sigint_handler.h exit_constants.h resources.h ping.h net.h debug.h ping_session_stat.h parse_args.h)
 
 # -I followed by dir name - it is dirrectory where compiler will find *.h files
 # during compilation process

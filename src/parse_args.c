@@ -31,7 +31,7 @@ static int parse_positive_int(char *str_value, char *program_name)
     exit(EXIT_FAILURE);
 }
 
-void parse_flags(int ac, char **argv, struct s_flags *flags)
+void parse_args(int ac, char **argv)
 {
     int option_index = 0;
     int ttl = 0;
@@ -104,7 +104,7 @@ void parse_flags(int ac, char **argv, struct s_flags *flags)
     //optind keeps index of first-non flag argument
     if (optind < ac)
     {
-        g_ping_session.host_from_args = argv[optind];
+        g_ping_session.target_arg = argv[optind];
     }
     else if (g_ping_session.flags.print_man_only)
     {

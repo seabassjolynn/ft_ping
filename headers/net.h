@@ -4,12 +4,9 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdio.h>
+//#include "ping_session.h"
 
 #define SRC_ADDR_OFFSET_IN_IP_PACKET 12
-
-void get_str_ip_addr_from_in_addr(struct in_addr *in_addr, char *str_ip_addr);
-
-void get_srs_ip_addr_from_ip_packet_as_str(void *ip_packet, char *str_ip_addr);
 
 int get_ip_header_length_in_bytes(uint8_t *packet);
 
@@ -54,7 +51,7 @@ struct s_icmp_echo_packet
     unsigned char payload[ECHO_PACKET_BODY_LENGTH];
 };
 
-struct s_icmp_echo_packet create_icmp_echo_request_packet();
+struct s_icmp_echo_packet create_echo_request();
 
 struct s_ip_header
 {
@@ -89,6 +86,14 @@ bool is_ping_error_reply(int code);
 
 void get_error_reply_code_description(int type, int code, char *description);
 
-void ipv4_network_to_str(uint32_t addr, char *str_addr);
+void get_addr_info(char *host, struct addrinfo **addr_info);
+
+void sockaddr_to_ipv4_addr_str(struct sockaddr *sockaddr, char *addr);
+
+void get_src_ipv4_addr_str(void *ip_packet, char *ipv4_addr_str);
+
+void int_addr_to_ipv4_addr_str(uint32_t addr, char *str_addr);
+
+void open_socket();
 
 #endif

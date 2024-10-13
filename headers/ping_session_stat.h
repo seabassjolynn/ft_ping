@@ -18,7 +18,7 @@ struct s_ping_session_stat
 
 float calc_round_trip_time_ms(struct timeval *start, struct  timeval *end);
 
-struct s_ping_session_stat calc_ping_session_stat(struct s_ping_session *ping_session);
+struct s_ping_session_stat calc_stat();
 
 void print_statistics(struct s_ping_session_stat *ping_session_stat);
 

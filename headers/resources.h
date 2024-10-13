@@ -11,7 +11,7 @@
 struct s_resources
 {
     int fd_socket;
-    struct addrinfo *addr_info;
+    struct addrinfo *target_addr_info;
     void *ping_data_arr;
 };
 

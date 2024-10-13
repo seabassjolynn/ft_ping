@@ -5,42 +5,15 @@
 #include <arpa/inet.h> //inet_ntop
 #include <stdlib.h> //exit
 
+//socket
+#include <sys/socket.h>
+
 #include "exit_constants.h"
 #include "net.h"
 #include "resources.h"
 
 #include <unistd.h> //getpid()
 #include "ping_session.h"
-
-//here i cast struct sockaddr* to struct sockaddr_in* because ai_addr may contain different address structures: struct sockaddr_in* - for ipv4, struct sockaddr_in6* for ipv6
-void get_str_ip_addr_from_in_addr(struct in_addr *in_addr, char *str_ip_addr)
-{
-    if(inet_ntop(AF_INET,in_addr, str_ip_addr, INET_ADDRSTRLEN) == NULL) {
-        fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
-        free_resources();
-        exit(EXIT_ERROR);
-    }
-}
-
-void get_srs_ip_addr_from_ip_packet_as_str(void *ip_packet, char *str_ip_addr) 
-{
-    uint32_t addr = *((uint32_t *)(ip_packet + SRC_ADDR_OFFSET_IN_IP_PACKET));
-    struct in_addr in_addr;
-    in_addr.s_addr = addr;
-    get_str_ip_addr_from_in_addr(&in_addr, str_ip_addr);
-}
-
-void ipv4_network_to_str(uint32_t addr, char *str_addr) {
-    struct in_addr in_addr;
-    in_addr.s_addr = addr;
-    bzero(str_addr, INET_ADDRSTRLEN);
-    
-    if(inet_ntop(AF_INET,&in_addr, str_addr, INET_ADDRSTRLEN) == NULL) {
-        fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
-        free_resources();
-        exit(EXIT_ERROR);
-    }
-}
 
 int get_ip_header_length_in_bytes(uint8_t *packet)
 {
@@ -71,7 +44,7 @@ uint16_t caclulate_checksum(void *addr, int len)
     return ~sum;
 }
 
-struct s_icmp_echo_packet create_icmp_echo_request_packet()
+struct s_icmp_echo_packet create_echo_request()
 {
     struct s_ping_header header;
     struct s_icmp_echo_packet packet;
@@ -178,5 +151,83 @@ void get_error_reply_code_description(int type, int code, char *description)
         default:
             strcpy(description, "Unknown Type");
             break;
+    }
+}
+
+void get_addr_info(char *host, struct addrinfo **addr_info)
+{
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET; // Allow IPv4
+    hints.ai_socktype = SOCK_RAW; // Raw socket for ICMP
+    hints.ai_protocol = IPPROTO_ICMP; // ICMP protocol
+    
+    int result = getaddrinfo(host, NULL, &hints, addr_info);
+
+    if (result != 0) {
+        fprintf(stderr, "%s: unknown host\n", host);
+        free_resources();
+        exit(EXIT_ERROR);
+    }
+}
+
+void sockaddr_to_ipv4_addr_str(struct sockaddr *sockaddr, char *addr)
+{
+    //here i cast struct sockaddr* to struct sockaddr_in* because ai_addr may contain different address structures: struct sockaddr_in* - for ipv4, struct sockaddr_in6* for ipv6
+    struct sockaddr_in sockaddr_in = *(struct sockaddr_in*) sockaddr;
+
+    if(inet_ntop(AF_INET,&sockaddr_in.sin_addr, addr, INET_ADDRSTRLEN) == NULL) {
+        fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
+        free_resources();
+        exit(EXIT_ERROR);
+    }
+}
+
+void get_src_ipv4_addr_str(void *ip_packet, char *ipv4_addr_str)
+{
+    struct s_ip_header ip_header = *((struct s_ip_header *) ip_packet); 
+    uint32_t addr = ip_header.src_address;
+    
+    struct in_addr in_addr;
+    in_addr.s_addr = addr;
+    int_addr_to_ipv4_addr_str(addr, ipv4_addr_str);
+}
+
+void int_addr_to_ipv4_addr_str(uint32_t addr, char *str_addr) 
+{
+    struct in_addr in_addr;
+    in_addr.s_addr = addr;
+    bzero(str_addr, INET_ADDRSTRLEN);
+    
+    if(inet_ntop(AF_INET,&in_addr, str_addr, INET_ADDRSTRLEN) == NULL) {
+        fprintf(stderr, "inet_ntop: %s\n", strerror(errno));
+        free_resources();
+        exit(EXIT_ERROR);
+    }
+}
+
+void open_socket()
+{
+    g_resources.fd_socket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    if (g_resources.fd_socket == -1) {
+        perror("socket");
+        free_resources();
+        exit(EXIT_ERROR);
+    }
+}
+
+void configure_socket()
+{
+    if (setsockopt(g_resources.fd_socket, SOL_SOCKET, SO_RCVTIMEO, (const void*)&g_ping_session.flags.linger, sizeof(struct timeval)) != 0)
+    {
+        perror("setsockopt");
+        free_resources();
+        exit(EXIT_FAILURE);
+    }
+    
+    if (setsockopt(g_resources.fd_socket, IPPROTO_IP, IP_TTL, &g_ping_session.flags.ttl, sizeof(g_ping_session.flags.ttl)) != 0) {
+        perror("setsockopt");
+        free_resources();
+        exit(EXIT_FAILURE);
     }
 }
