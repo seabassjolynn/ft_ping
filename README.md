@@ -1,46 +1,24 @@
-**Note:** Project is developed under debian 12, so it must be run under this OS
-## To Compile Project:
+# ft_ping
 
-1. `cd` to project folder
-2. Run: `sudo make run MAKE_ARG=google.com`
+**Note:** Project is developed under Debian 12, so it must be run under this OS.
 
-**Note:** `google.com` can be replaced with whatever IPv4 address or hostname.
+## To Compile the Project:
 
-### Possible Outputs:
+1. `cd` to the project folder.
+2. `sudo make`.
 
-1. **If hostname exists** (command to run: `make run MAKE_ARG=google.com`):
+## Description:
 
-    ```
-    PING google.com (142.251.37.14): 56 data bytes
-    Send ICMP packet successfully. Number of bytes sent is: 56
-    Received ICMP reply. Id: 27496 sequence num: 5
-    ```
+`ft_ping` is a custom reimplementation of the standard `ping` utility, developed as a network programming practice project. The purpose is to understand the **ICMP protocol** and gain experience working with **raw sockets**.
 
-    *Resolved address is seen here. Sequence number should increase from 0 with each ping statement. If you see sequence numbers like 0, 1, 2, 3..., then we are likely to receive correct responses.*
+`ft_ping` supports typical use cases such as `ft_ping example.com` and includes the following flags:
 
-2. **If address exists** (command to run: `make run MAKE_ARG=142.251.37.14`):
+- **`-c N`**: Stop after sending N packets.
+- **`--ttl=N`**: Set the Time to Live (TTL) for packets.
+- **`-w N`**: Set a timeout in seconds for the entire ping session.
+- **`-W N`**: Set a timeout in seconds to wait for each reply.
+- **`-d`**: Enable debug mode.
+- **`-v`**: Enable verbose output.
+- **`-?`**: Display help and usage information.
 
-    ```
-    PING 142.251.37.14 (142.251.37.14): 56 data bytes
-    Send ICMP packet successfully. Number of bytes sent is: 56
-    Received ICMP reply. Id: 27942 sequence num: 2
-    ```
-
-3. **If address/hostname is invalid**:
-
-    ```
-    getaddrinfo: Name or service not known
-    ```
-
-4. **If address is valid, but doesn't reply**:
-
-    ```
-    Failed to receive ICMP packet
-    PING 2.2.2.2 (2.2.2.2): 56 data bytes
-    Send ICMP packet successfully. Number of bytes sent is: 56
-
-## Program functionality:
-1. cntrl + c key combination stops ping execution and displays
-ping statistics.
-**currently only statistics header is displayed, and statistics will be**
-**implemented further.**
+This project enhances understanding of low-level network communication while mimicking essential `ping` functionality.
