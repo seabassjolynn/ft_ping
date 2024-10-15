@@ -113,7 +113,7 @@ static void print_original_icpm(struct s_ping_header *ping_header)
 {
     printf("ICMP: type %d, ", ping_header->type);
     printf("code %d, ", ping_header->code);
-    printf("size %ld, ", sizeof(struct s_icmp_echo_packet));
+    printf("size %u, ", sizeof(struct s_icmp_echo_packet));
     printf("id 0x%04x, ", ping_header->identifier);
     printf("seq 0x%04x\n", ping_header->sequence_number);
 }

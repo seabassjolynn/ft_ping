@@ -36,9 +36,8 @@ CFLAGS =  -c -g -Wall -Wextra -Werror # Flag for implicit rules.
 #below is rule. all - rule name, after ":" go dependency that is needed to execute rule
 #all is the rule common to all make files. By convention it must compile all system
 all: $(APP)
-	
 
-$(APP): $(OBJS) $(HEADERS) #here this OBJS variable is expaned to list of .o files. And make will go and look for rule that corresponds to name.o file. And it will find this rule in %.o : %.c
+$(APP): $(OBJS) #here this OBJS variable is expaned to list of .o files. And make will go and look for rule that corresponds to name.o file. And it will find this rule in %.o : %.c
 	@ echo target $(APP_NAME)
 	@ $(CC) -o $(APP) $(OBJS) -lm #-lm to link math library, otherwise can not compile
 # -o is compiler flag to produce object *.o file with particular name 
@@ -47,8 +46,9 @@ $(APP): $(OBJS) $(HEADERS) #here this OBJS variable is expaned to list of .o fil
 #$@ this is local variable $@ means take whatever it is on left side of colon in %.o : %.c
 # @ echo target means that command itself will not be printed to console
 #$(HEADERS) <- ADD WHEN I HAVE HEADERS
+# $< - this referes to first prerequisite. i.e. in %.o: %.c it is %.c
 
-%.o: %.c
+%.o: %.c $(HEADERS)
 	@ echo target $@
 	$(CC) $(CFLAGS) -I$(HEADERS_DIR) $< -o $@
 
