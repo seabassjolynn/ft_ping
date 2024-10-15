@@ -34,7 +34,6 @@ static int parse_positive_int(char *str_value, char *program_name)
 void parse_args(int ac, char **argv)
 {
     int option_index = 0;
-    int ttl = 0;
 
     // Define the long options
     struct option long_options[] = {
@@ -67,7 +66,9 @@ void parse_args(int ac, char **argv)
                     fprintf(stderr, "Try '%s --help' or '%s --usage' for more information.\n",  argv[0], argv[0]);
                     exit(EXIT_ERROR);
                 }
+                // fall through
             case 'h':
+                // fall through
             case 'u':
                 g_ping_session.flags.print_man_only = true;
                 c = -1; //stop parsing flags error messages about unknown flags are not printed.

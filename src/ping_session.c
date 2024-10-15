@@ -32,7 +32,7 @@ void print_icmp_echo_reply(struct s_ping_data *ping_data)
 {
     float time = calc_round_trip_time_ms(&ping_data->time_start, &ping_data->time_end);
 
-    printf("%d bytes from %s: icmp_seq=%d ttl=%ld time=%.3f\n", ping_data->received_bytes_count, ping_data->reply_host_str_addr, ping_data->icmp_seq_number, g_ping_session.flags.ttl, time);
+    printf("%ld bytes from %s: icmp_seq=%ld ttl=%d time=%.3f\n", ping_data->received_bytes_count, ping_data->reply_host_str_addr, ping_data->icmp_seq_number, g_ping_session.flags.ttl, time);
 }
 
 static void print_original_ip_header_hex_dump(struct s_ip_header *ip_header)
@@ -120,7 +120,7 @@ static void print_original_icpm(struct s_ping_header *ping_header)
 
 void print_icmp_error_reply(struct s_ping_data *ping_data)
 {
-    printf("%d bytes from %s: %s\n", ping_data->received_bytes_count, ping_data->reply_host_str_addr, ping_data->error_reply_code_description);
+    printf("%ld bytes from %s: %s\n", ping_data->received_bytes_count, ping_data->reply_host_str_addr, ping_data->error_reply_code_description);
     if (g_ping_session.flags.is_verbose)
     {
         print_original_ip_header_hex_dump(&ping_data->error_reply.original_data.ip_header);

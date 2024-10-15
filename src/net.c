@@ -187,9 +187,6 @@ void get_src_ipv4_addr_str(void *ip_packet, char *ipv4_addr_str)
 {
     struct s_ip_header ip_header = *((struct s_ip_header *) ip_packet); 
     uint32_t addr = ip_header.src_address;
-    
-    struct in_addr in_addr;
-    in_addr.s_addr = addr;
     int_addr_to_ipv4_addr_str(addr, ipv4_addr_str);
 }
 
