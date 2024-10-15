@@ -165,7 +165,7 @@ void get_addr_info(char *host, struct addrinfo **addr_info)
     int result = getaddrinfo(host, NULL, &hints, addr_info);
 
     if (result != 0) {
-        fprintf(stderr, "%s: unknown host\n", host);
+        fprintf(stderr, "%s: unknown host\n", "./ft_ping");
         free_resources();
         exit(EXIT_ERROR);
     }
