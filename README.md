@@ -21,4 +21,3 @@
 - **`-v`**: Enable verbose output.
 - **`-?`**: Display help and usage information.
 
-This project enhances understanding of low-level network communication while mimicking essential `ping` functionality.
